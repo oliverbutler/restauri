@@ -43,7 +43,7 @@
   }
 
   .dark {
-    --background: 0 0% 2%;
+    --background: 0 0% 6%;
     --foreground: 213 31% 91%;
 
     --muted: 223 47% 11%;
@@ -84,4 +84,15 @@
     @apply bg-background text-foreground;
     font-feature-settings: 'rlig' 1, 'calt' 1;
   }
+}
+
+/* For Webkit-based browsers (Chrome, Safari and Opera) */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* For IE, Edge and Firefox */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }

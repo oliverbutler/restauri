@@ -58,7 +58,7 @@ function App() {
       className="w-full h-full max-w-[100vw] max-h-full pt-6"
       data-tauri-drag-region
     >
-      <div className="flex flex-row gap-4 w-full">
+      <div className="flex flex-row gap-4 w-full h-full">
         <div>
           <nav
             aria-label="Main Nav"

@@ -5,7 +5,7 @@ import { Button } from './ui/button';
 import toast from 'react-hot-toast';
 import { queryClient } from './main';
 import { Input } from './ui/input';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Select,
   SelectContent,
@@ -25,17 +25,27 @@ import {
 import { Edit } from 'lucide-react';
 import { EditRequest } from './EditRequest';
 import { HTTP_METHODS, HttpMethod } from './HttpMethod';
+import Editor from '@monaco-editor/react';
+import clsx from 'clsx';
 
-const HistoryPanel = ({ history }: { history: RequestHistory[] }) => {
+const HistoryPanel = ({
+  history,
+  selectedId,
+}: {
+  history: RequestHistory[];
+  selectedId: number;
+}) => {
   return (
-    <div className="w-24">
-      <div className="flex flex-col gap-2 overflow-scroll ">
+    <div className="w-full">
+      <div className="flex flex-row gap-4 overflow-scroll scrollbar-hide ">
         {history.map((request) => (
           <div
-            className="w-24 h-12 bg-gray-900 flex justify-center items-center"
+            className={clsx('h-16 flex justify-center items-center', {
+              'text-primary': request.id === selectedId,
+            })}
             key={request.id}
           >
-            {request.response_status_code} {request.response_time_ms}ms
+            {request.response_status_code}
           </div>
         ))}
       </div>
@@ -97,8 +107,26 @@ export const RequestPanel = ({ requestId }: { requestId: number }) => {
 
   if (!selectedRequest) return null;
 
+  const formattedResponseJson = useMemo(() => {
+    try {
+      return JSON.stringify(
+        JSON.parse(latestRequest?.response_body || '{}'),
+        null,
+        2
+      );
+    } catch (e) {
+      return latestRequest?.response_body || '';
+    }
+  }, [latestRequest?.response_body]);
+
+  const formattedRequestJson = JSON.stringify(
+    JSON.parse(selectedRequest?.body || '{}'),
+    null,
+    2
+  );
+
   return (
-    <div className="w-full p-2">
+    <div className="flex flex-col gap-2 h-full">
       <div className="flex flex-row gap-2 w-full">
         <Select
           onValueChange={(value) => {
@@ -151,20 +179,50 @@ export const RequestPanel = ({ requestId }: { requestId: number }) => {
           Send
         </Button>
       </div>
-      <div>
-        <h2>Response {latestRequest?.response_status_code}</h2>
-        <div>{latestRequest?.response_time_ms}ms</div>
-        <div className="whitespace-break-spaces overflow-auto">
-          <pre className="">
-            {JSON.stringify(
-              JSON.parse(latestRequest?.response_body || '{}'),
-              null,
-              2
-            )}
-          </pre>
+      <div className="flex-grow flex flex-row w-full h-full">
+        {selectedRequest.method !== 'GET' ? (
+          <div className="w-1/2 flex flex-col">
+            <p>request</p>
+            <Editor
+              defaultLanguage="json"
+              defaultValue={formattedRequestJson}
+              theme="vs-dark"
+              className="block"
+              options={{}}
+              onChange={(value) => {
+                console.log({ value });
+
+                invoke('update_request', {
+                  requestId: selectedRequest.id,
+                  request: {
+                    ...selectedRequest,
+                    body: value,
+                  },
+                }).then(() => {
+                  console.log('refetching');
+                  queryClient.refetchQueries(['request', selectedRequest.id]);
+                });
+              }}
+            />
+          </div>
+        ) : null}
+        <div className="flex-grow flex flex-col">
+          {latestRequest?.created_at}
+          <Editor
+            className=""
+            defaultLanguage="json"
+            value={formattedResponseJson}
+            theme="vs-dark"
+            options={{
+              readOnly: true,
+            }}
+          />
         </div>
       </div>
-      {/* <HistoryPanel history={history ?? []} /> */}
+      <HistoryPanel
+        history={result.data ?? []}
+        selectedId={latestRequest?.id || -1}
+      />
     </div>
   );
 };
