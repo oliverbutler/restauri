@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api';
-import { RequestHistory } from './bindings/bindings';
+import { Request, RequestHistory } from './bindings/bindings';
 import { Button } from './ui/button';
 import toast from 'react-hot-toast';
 import { queryClient } from './main';
 import { Input } from './ui/input';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Select,
   SelectContent,
@@ -13,6 +13,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from './ui/dialog';
+import { Edit } from 'lucide-react';
+import { EditRequest } from './EditRequest';
+import { HTTP_METHODS, HttpMethod } from './HttpMethod';
 
 const HistoryPanel = ({ history }: { history: RequestHistory[] }) => {
   return (
@@ -23,7 +35,7 @@ const HistoryPanel = ({ history }: { history: RequestHistory[] }) => {
             className="w-24 h-12 bg-gray-900 flex justify-center items-center"
             key={request.id}
           >
-            {request.status_code} {request.response_time_ms}ms
+            {request.response_status_code} {request.response_time_ms}ms
           </div>
         ))}
       </div>
@@ -40,48 +52,98 @@ export const RequestPanel = ({ requestId }: { requestId: number }) => {
       }) as unknown as RequestHistory[]
   );
 
-  const history = result.data;
+  const requestsResult = useQuery(
+    ['requests'],
+    () => invoke('get_requests') as unknown as Request[],
+    {
+      staleTime: 30 * 1000,
+    }
+  );
 
-  const latestRequest = history?.[0];
+  const latestRequest = result.data?.[0] || null;
 
-  const selectedRequest = history?.find((request) => request.id === requestId);
+  const requests = requestsResult.data || [];
+
+  const selectedRequest = requests.find((request) => request.id === requestId);
 
   const makeRequest = async (requestId: number, url: string) => {
-    toast.promise(
-      invoke('make_request', {
-        requestId,
-        url,
-      }).then(() => {
-        queryClient.refetchQueries(['request', requestId]);
-      }),
-      {
-        loading: 'Sending request...',
-        success: 'Request sent!',
-        error: 'Failed to send request',
-      }
-    );
+    invoke('make_request', {
+      requestId,
+      url,
+    }).then(() => {
+      queryClient.refetchQueries(['request', requestId]);
+    });
   };
 
   const [url, setUrl] = useState<string>(selectedRequest?.url || '');
 
-  if (!selectedRequest) {
-    return <div>Request not found</div>;
-  }
+  const urlRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && e.metaKey && selectedRequest) {
+        makeRequest(selectedRequest.id, selectedRequest.url);
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    urlRef.current?.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      urlRef.current?.removeEventListener('keydown', onKeyDown);
+    };
+  }, [selectedRequest]);
+
+  if (!selectedRequest) return null;
 
   return (
-    <div className="w-full">
+    <div className="w-full p-2">
       <div className="flex flex-row gap-2 w-full">
-        <Select>
+        <Select
+          onValueChange={(value) => {
+            invoke('update_request', {
+              requestId: selectedRequest.id,
+              request: {
+                ...selectedRequest,
+                method: value,
+              },
+            }).then(() => {
+              queryClient.refetchQueries(['requests']);
+            });
+          }}
+        >
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="GET" />
+            <HttpMethod method={selectedRequest.method} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="GET">GET</SelectItem>
-            <SelectItem value="POST">POST</SelectItem>
-            <SelectItem value="PUT">PUT</SelectItem>
+            {HTTP_METHODS.map((method) => (
+              <SelectItem value={method}>
+                <HttpMethod method={method} />
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
-        <Input value={url} onChange={(e) => setUrl(e.target.value)} />
+        <Input
+          ref={urlRef}
+          value={url}
+          onChange={(e) => {
+            setUrl(e.target.value);
+            invoke('update_request', {
+              requestId: selectedRequest.id,
+              request: {
+                ...selectedRequest,
+                url: e.target.value,
+              },
+            })
+              .then(() => {
+                queryClient.refetchQueries(['request', selectedRequest.id]);
+              })
+              .catch((e) => {
+                toast.error(e);
+              });
+          }}
+        />
         <Button
           variant={'default'}
           onClick={() => makeRequest(selectedRequest.id, selectedRequest.url)}
@@ -90,7 +152,7 @@ export const RequestPanel = ({ requestId }: { requestId: number }) => {
         </Button>
       </div>
       <div>
-        <h2>Response {latestRequest?.status_code}</h2>
+        <h2>Response {latestRequest?.response_status_code}</h2>
         <div>{latestRequest?.response_time_ms}ms</div>
         <div className="whitespace-break-spaces overflow-auto">
           <pre className="">

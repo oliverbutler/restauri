@@ -4,6 +4,24 @@ import { QueryClient, useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
 import { RequestPanel } from './RequestPanel';
 import { Request } from './bindings/bindings';
+import {
+  ContextMenu,
+  ContextMenuTrigger,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSub,
+  ContextMenuSubTrigger,
+  ContextMenuSubContent,
+  ContextMenuSeparator,
+  ContextMenuCheckboxItem,
+  ContextMenuRadioGroup,
+  ContextMenuLabel,
+  ContextMenuRadioItem,
+  ContextMenuShortcut,
+} from './ui/context-menu';
+import { AddRequest } from './AddRequest';
+import { HttpMethod } from './HttpMethod';
+import { EditRequest } from './EditRequest';
 
 function App() {
   const [selectedRequestId, setSelectedRequestId] = useState<number | null>(
@@ -36,23 +54,48 @@ function App() {
   const [url, setUrl] = useState('');
 
   return (
-    <div className="w-full h-full max-w-[100vw] max-h-full">
+    <div
+      className="w-full h-full max-w-[100vw] max-h-full pt-6"
+      data-tauri-drag-region
+    >
       <div className="flex flex-row gap-4 w-full">
         <div>
-          <nav aria-label="Main Nav" className="flex flex-col space-y-1 w-64">
+          <nav
+            aria-label="Main Nav"
+            className="flex flex-col space-y-1 w-64 m-2"
+          >
             {requests.map((request) => (
-              <a
-                className={clsx(
-                  'block rounded-lg hover:bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 cursor-pointer truncate',
-                  {
-                    'bg-gray-100': selectedRequestId === request.id,
-                  }
-                )}
-                onClick={() => setSelectedRequestId(request.id)}
-              >
-                {request.url}
-              </a>
+              <ContextMenu>
+                <ContextMenuTrigger
+                  className={clsx(
+                    'rounded-lg hover:bg-muted px-4 py-2 text-sm font-medium cursor-pointer truncate flex flex-row group',
+                    {
+                      'bg-muted': selectedRequestId === request.id,
+                    }
+                  )}
+                  onClick={() => setSelectedRequestId(request.id)}
+                >
+                  <div>
+                    <HttpMethod method={request.method} />{' '}
+                    {request.name || request.url}
+                  </div>
+                  <div className="ml-auto hidden group-hover:block">
+                    <EditRequest request={request} />
+                  </div>
+                </ContextMenuTrigger>
+                <ContextMenuContent className="w-64">
+                  <ContextMenuItem inset>
+                    Edit
+                    <ContextMenuShortcut>⌘e</ContextMenuShortcut>
+                  </ContextMenuItem>
+                  <ContextMenuItem inset>
+                    Delete
+                    <ContextMenuShortcut>⌘d</ContextMenuShortcut>
+                  </ContextMenuItem>
+                </ContextMenuContent>
+              </ContextMenu>
             ))}
+            <AddRequest />
           </nav>
         </div>
         <div className="flex-grow w-24">
