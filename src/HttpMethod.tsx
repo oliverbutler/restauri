@@ -20,9 +20,14 @@ const buttonVariants = cva('text-sm', {
   },
 });
 
-export const HttpMethod = (props: { method: string }) => {
+export const HttpMethod = (props: { method: string; className?: string }) => {
   return (
-    <span className={cn(buttonVariants({ method: props.method as any }))}>
+    <span
+      className={cn(
+        buttonVariants({ method: props.method as any }),
+        props.className
+      )}
+    >
       {props.method}
     </span>
   );

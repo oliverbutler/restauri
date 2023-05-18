@@ -161,13 +161,32 @@ async fn get_request_history(
     let requests = sqlx::query_as!(
         RequestHistory,
         "SELECT * FROM request_history WHERE request_id = ? ORDER BY created_at DESC",
-        request_id
+        request_id,
     )
     .fetch_all(&mut conn)
     .await
     .map_err(|e| e.to_string())?;
 
     return Ok(requests);
+}
+
+#[tauri::command]
+async fn get_latest_request_history(
+    pool: tauri::State<'_, Pool<Sqlite>>,
+    request_id: i32,
+) -> Result<Option<RequestHistory>, String> {
+    let mut conn = pool.acquire().await.map_err(|e| e.to_string())?;
+
+    let request = sqlx::query_as_unchecked!(
+        RequestHistory,
+        "SELECT * FROM request_history WHERE request_id = ? ORDER BY created_at DESC LIMIT 1",
+        request_id,
+    )
+    .fetch_optional(&mut conn)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    return Ok(request);
 }
 
 #[tauri::command]
@@ -213,7 +232,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             get_requests,
             make_request,
             get_request_history,
-            update_request
+            update_request,
+            get_latest_request_history
         ])
         .manage(pool)
         .run(tauri::generate_context!())

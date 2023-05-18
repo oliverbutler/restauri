@@ -6,6 +6,7 @@ specifiers:
   '@radix-ui/react-dialog': ^1.0.3
   '@radix-ui/react-select': ^1.2.1
   '@radix-ui/react-slot': ^1.0.1
+  '@radix-ui/react-tabs': ^1.0.3
   '@tanstack/react-query': ^4.29.5
   '@tanstack/react-query-devtools': ^4.29.6
   '@tauri-apps/api': ^1.3.0
@@ -29,6 +30,7 @@ specifiers:
   tailwindcss-animate: ^1.0.5
   typescript: ^4.9.5
   vite: ^4.2.1
+  zustand: ^4.3.8
 
 dependencies:
   '@monaco-editor/react': 4.5.1_gesakegkf6ivhdtrwoiybdd3ni
@@ -36,6 +38,7 @@ dependencies:
   '@radix-ui/react-dialog': 1.0.3_tqcjxml4rosq5qpg5cznikfcd4
   '@radix-ui/react-select': 1.2.1_tqcjxml4rosq5qpg5cznikfcd4
   '@radix-ui/react-slot': 1.0.1_react@18.2.0
+  '@radix-ui/react-tabs': 1.0.3_biqbaboplfbrettd7655fr4n2y
   '@tanstack/react-query': 4.29.5_biqbaboplfbrettd7655fr4n2y
   '@tanstack/react-query-devtools': 4.29.6_6ufraba7zs65ngvban5jjen7be
   '@tauri-apps/api': 1.3.0
@@ -49,6 +52,7 @@ dependencies:
   react-hot-toast: 2.4.1_s7mghcr6idhb4d5ook54gl4n44
   tailwind-merge: 1.12.0
   tailwindcss-animate: 1.0.5_tailwindcss@3.3.2
+  zustand: 4.3.8_react@18.2.0
 
 devDependencies:
   '@tauri-apps/cli': 1.3.1
@@ -907,6 +911,25 @@ packages:
       '@babel/runtime': 7.21.5
       '@radix-ui/react-compose-refs': 1.0.0_react@18.2.0
       react: 18.2.0
+    dev: false
+
+  /@radix-ui/react-tabs/1.0.3_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-4CkF/Rx1GcrusI/JZ1Rvyx4okGUs6wEenWA0RG/N+CwkRhTy7t54y7BLsWUXrAz/GRbBfHQg/Odfs/RoW0CiRA==}
+    peerDependencies:
+      react: ^16.8 || ^17.0 || ^18.0
+      react-dom: ^16.8 || ^17.0 || ^18.0
+    dependencies:
+      '@babel/runtime': 7.21.5
+      '@radix-ui/primitive': 1.0.0
+      '@radix-ui/react-context': 1.0.0_react@18.2.0
+      '@radix-ui/react-direction': 1.0.0_react@18.2.0
+      '@radix-ui/react-id': 1.0.0_react@18.2.0
+      '@radix-ui/react-presence': 1.0.0_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-primitive': 1.0.2_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-roving-focus': 1.0.3_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-use-controllable-state': 1.0.0_react@18.2.0
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
     dev: false
 
   /@radix-ui/react-use-callback-ref/1.0.0_react@18.2.0:
@@ -2113,3 +2136,19 @@ packages:
   /yaml/2.2.2:
     resolution: {integrity: sha512-CBKFWExMn46Foo4cldiChEzn7S7SRV+wqiluAb6xmueD/fGyRHIhX8m14vVGgeFWjN540nKCNVj6P21eQjgTuA==}
     engines: {node: '>= 14'}
+
+  /zustand/4.3.8_react@18.2.0:
+    resolution: {integrity: sha512-4h28KCkHg5ii/wcFFJ5Fp+k1J3gJoasaIbppdgZFO4BPJnsNxL0mQXBSFgOgAdCdBj35aDTPvdAJReTMntFPGg==}
+    engines: {node: '>=12.7.0'}
+    peerDependencies:
+      immer: '>=9.0'
+      react: '>=16.8'
+    peerDependenciesMeta:
+      immer:
+        optional: true
+      react:
+        optional: true
+    dependencies:
+      react: 18.2.0
+      use-sync-external-store: 1.2.0_react@18.2.0
+    dev: false

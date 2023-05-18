@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/tauri';
 import { QueryClient, useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
-import { RequestPanel } from './RequestPanel';
+import { RequestPanel } from './RequestPanel/RequestPanel';
 import { Request } from './bindings/bindings';
 import {
   ContextMenu,
@@ -22,36 +22,18 @@ import {
 import { AddRequest } from './AddRequest';
 import { HttpMethod } from './HttpMethod';
 import { EditRequest } from './EditRequest';
+import { useAppStore } from './store';
+import { useRequests } from './bindings/useRequests';
 
 function App() {
-  const [selectedRequestId, setSelectedRequestId] = useState<number | null>(
-    null
-  );
+  const activeRequestId = useAppStore((store) => store.activeRequestId);
+  const setActiveRequestId = useAppStore((store) => store.setActiveRequestId);
 
-  const requestsQuery = useQuery(
-    ['requests'],
-    () => invoke('get_requests') as unknown as Request[],
-    {
-      staleTime: 30 * 1000,
-      onSuccess: (data) => {
-        const firstRequest = data[0];
+  const { requests, isLoading } = useRequests();
 
-        if (firstRequest) {
-          setSelectedRequestId(firstRequest.id);
-        }
-      },
-    }
-  );
-
-  const addRequest = async () => {
-    await invoke('add_request', { url });
-
-    requestsQuery.refetch();
-  };
-
-  const requests = requestsQuery.data || [];
-
-  const [url, setUrl] = useState('');
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div
@@ -70,10 +52,10 @@ function App() {
                   className={clsx(
                     'rounded-lg hover:bg-muted px-4 py-2 text-sm font-medium cursor-pointer truncate flex flex-row group',
                     {
-                      'bg-muted': selectedRequestId === request.id,
+                      'bg-muted': activeRequestId === request.id,
                     }
                   )}
-                  onClick={() => setSelectedRequestId(request.id)}
+                  onClick={() => setActiveRequestId(request.id)}
                 >
                   <div>
                     <HttpMethod method={request.method} />{' '}
@@ -99,11 +81,8 @@ function App() {
           </nav>
         </div>
         <div className="flex-grow w-24">
-          {selectedRequestId ? (
-            <RequestPanel
-              requestId={selectedRequestId}
-              key={selectedRequestId}
-            />
+          {activeRequestId ? (
+            <RequestPanel requestId={activeRequestId} key={activeRequestId} />
           ) : (
             <div className="flex flex-col items-center justify-center h-full">
               <div className="text-2xl font-bold text-gray-400">
